@@ -1,0 +1,29 @@
+# Get packages with conda
+conda create --name BAI python=3.7.5
+activate BAI
+conda install numpy
+conda install h5py
+conda install matplotlib
+conda install scikit-learn
+conda install tensorflow
+conda install -c conda-forge opencv
+pip install webrtcvad
+
+# Get packages with pip
+pip install numpy
+pip install h5py
+pip install matplotlib
+pip install webrtcvad
+pip install scikit-learn
+pip install opencv-python
+pip install tensorflow
+
+# Test Imports are Installed
+import numpy
+import h5py
+import tensorflow
+import matplotlib
+import webrtcvad
+import mpl_toolkits
+import sklearn
+import cv2
