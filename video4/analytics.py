@@ -1,6 +1,6 @@
 """
 Author: Travis Hammond
-Version: 12_14_2019
+Version: 12_19_2019
 """
 
 
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import (
     TSNE, Isomap, LocallyLinearEmbedding, MDS
 )
+
 
 class Analyzer:
     """Analyzer is a class used for manipulating classifier datasets
@@ -22,7 +23,7 @@ class Analyzer:
             x_data: A numpy ndarray
             y_data: A numpy ndarray, which is a onehot encoding or ndx
                     that corresponds to the label in labels
-            labels: A list of strings, which are labels for the y_data 
+            labels: A list of strings, which are labels for the y_data
             label_colors: A list of list that contain 3 integers, which
                           represent a color of a label for plotting
         """
@@ -74,7 +75,6 @@ class Analyzer:
             size_per_label: A dictionary with labels as keys and sizes
                             as values, or an integer, which is the size
                             for all labels
-                            
         """
         if ndx_groups is None:
             ndx_groups = self.create_label_ndx_groups()
@@ -96,13 +96,12 @@ class Analyzer:
         self.y_data = self.y_data[ndxs]
         self.y_labels = self.y_labels[ndxs]
         self.y_colors = self.y_colors[ndxs]
-        
 
     def plot(self, x, figsize=(8, 8)):
-        """Plots 
+        """Plots x on a graph.
         params:
             x: A numpy ndarray of positonal points for x_data
-            figsize: A tuple of 2 integers/floats, which are 
+            figsize: A tuple of 2 integers/floats, which are
                      width and height espectively
         return: unmodified x
         """
@@ -114,26 +113,25 @@ class Analyzer:
             ax.scatter(nx, nx, c=self.y_colors)
             m = x.mean()
             for ndx in range(len(self.labels)):
-                ax.scatter(m, m, c=[self.colors[ndx]], 
-                            label=self.labels[ndx])
-            ax.scatter(m, m, c=[[0, 0, 0]], 
+                ax.scatter(m, m, c=[self.colors[ndx]],
+                           label=self.labels[ndx])
+            ax.scatter(m, m, c=[[0, 0, 0]],
                        label='AVERAGE')
         elif dims == 2:
             ax = fig.add_subplot(111)
-            ax.scatter(x[:,0], x[:,1], c=self.y_colors)
+            ax.scatter(x[:, 0], x[:, 1], c=self.y_colors)
             m = x.mean(axis=-1)
             for ndx in range(len(self.labels)):
-                ax.scatter(m[0], m[1], c=[self.colors[ndx]], 
+                ax.scatter(m[0], m[1], c=[self.colors[ndx]],
                             label=self.labels[ndx])
-            ax.scatter(m[0], m[1], c=[[0, 0, 0]], 
+            ax.scatter(m[0], m[1], c=[[0, 0, 0]],
                        label='AVERAGE')
         elif dims == 3:
             ax = fig.add_subplot(111, projection='3d')
-            ax.scatter(x[:,0], x[:,1], x[:,2], c=self.y_colors)
+            ax.scatter(x[:, 0], x[:, 1], x[:, 2], c=self.y_colors)
             m = x.mean(axis=0)
             for ndx in range(len(self.labels)):
-
-                ax.scatter(m[0], m[1], m[2], c=[self.colors[ndx]], 
+                ax.scatter(m[0], m[1], m[2], c=[self.colors[ndx]],
                            label=self.labels[ndx])
             ax.scatter(m[0], m[1], m[2], c=[[0, 0, 0]],
                        label='AVERAGE')
@@ -168,7 +166,7 @@ class Analyzer:
         """
         isomap = Isomap(n_neighbors=n_neighbors, n_components=n_components,
                         eigen_solver=eigen_solver, tol=tol, max_iter=max_iter,
-                        path_method=path_method, 
+                        path_method=path_method,
                         neighbors_algorithm=neighbors_algorithm, n_jobs=n_jobs)
         x_data = self.x_data.reshape(
             (self.x_data.shape[0], np.prod(self.x_data.shape[1:]))
@@ -178,7 +176,8 @@ class Analyzer:
     def locally_linear_embedding(self, n_neighbors=5, n_components=3, reg=1e-3,
                                  eigen_solver='auto', tol=1e-6, max_iter=100,
                                  method='standard', hessian_tol=1E-4,
-                                 modified_tol=1E-12, neighbors_algorithm='auto',
+                                 modified_tol=1E-12,
+                                 neighbors_algorithm='auto',
                                  random_state=None,
                                  n_jobs=None):
         """Computes the locally linear embedding of x_data.
@@ -223,7 +222,7 @@ class Analyzer:
         return lle.fit_transform(x_data)
 
     def mds(self, n_components=3, metric=True, n_init=4, max_iter=300,
-            verbose=0, eps=1e-3, random_state=None, 
+            verbose=0, eps=1e-3, random_state=None,
             dissimilarity='euclidean', n_jobs=None):
         """Creates a Multidimensional scaling and fits x_data.
         params:
@@ -293,23 +292,24 @@ class Analyzer:
                 (length of x_data, n_components)
         """
         tsne = TSNE(n_components=n_components, perplexity=perplexity,
-                    early_exaggeration=early_exaggeration, 
+                    early_exaggeration=early_exaggeration,
                     learning_rate=learning_rate, n_iter=n_iter,
-                    n_iter_without_progress=n_iter_without_progress, 
-                    min_grad_norm= min_grad_norm, metric=metric,
-                    init=init, verbose=verbose, random_state=random_state, 
+                    n_iter_without_progress=n_iter_without_progress,
+                    min_grad_norm=min_grad_norm, metric=metric,
+                    init=init, verbose=verbose, random_state=random_state,
                     method=method, angle=angle, n_jobs=n_jobs)
         x_data = self.x_data.reshape(
             (self.x_data.shape[0], np.prod(self.x_data.shape[1:]))
         )
         return tsne.fit_transform(x_data)
 
+
 if __name__ == '__main__':
     from tensorflow import keras
     td, vd = keras.datasets.fashion_mnist.load_data()
-    labels = ['T-shirt', 'Trouser', 'Pullover', 'Dress', 
-                'Coat', 'Sandal', 'Shirt', 'Sneaker', 
-                'Bag', 'Ankle boot']
+    labels = ['T-shirt', 'Trouser', 'Pullover', 'Dress',
+              'Coat', 'Sandal', 'Shirt', 'Sneaker',
+              'Bag', 'Ankle boot']
     a = Analyzer(vd[0], vd[1], labels)
     print('\ncreate label ndx groups:')
     print(a.create_label_ndx_groups())
