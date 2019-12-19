@@ -1,6 +1,6 @@
 """
 Author: Travis Hammond
-Version: 12_17_2019
+Version: 12_19_2019
 """
 
 
@@ -107,7 +107,7 @@ def pyr(image, level):
 def load(filename, target_shape=None, color=True):
     """Loads an image from a file.
     params:
-        filename: A string, which is the directory or filename of the 
+        filename: A string, which is the directory or filename of the
                   file to load
         target_shape: A tuple with the vertical size then horizontal size
         color: A boolean, which determines if the image should be
@@ -123,7 +123,7 @@ def load(filename, target_shape=None, color=True):
         image = gray(image)
     return image
 
-    
+
 def save(filename, image, target_shape=None, color=True):
     """Saves an image to a file.
     params:
@@ -150,13 +150,13 @@ def increase_brightness(image, percentage, relative=False):
     return: A numpy ndarray, which has the same number of dimensions as image
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    v = hsv[:,:,2]
+    v = hsv[:, :, 2]
     if relative:
         v = v.astype(np.int) + v.astype(np.int) * percentage / 100
     else:
         v = v.astype(np.int) + 255 * percentage / 100
     v = v.round().clip(0, 255).astype(np.uint8)
-    hsv[:,:,2] = v
+    hsv[:, :, 2] = v
     return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
 
@@ -170,14 +170,14 @@ def set_brightness(image, percentage, relative=False):
     return: A numpy ndarray, which has the same number of dimensions as image
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    v = hsv[:,:,2]
+    v = hsv[:, :, 2]
     if relative:
         v = v.astype(np.int) * percentage / 100
         v = v.round().clip(0, 255)
     else:
         v = np.full(v.shape, np.clip(round(255 * percentage / 100), 0, 255))
     v = v.astype(np.uint8)
-    hsv[:,:,2] = v
+    hsv[:, :, 2] = v
     return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
 
@@ -205,9 +205,9 @@ def apply_clahe(image, clip_limit=40.0, tile_grid_size=(8, 8)):
     if image.ndim == 2:
         return clahe.apply(image)
     else:
-        b = clahe.apply(image[:,:,0])
-        g = clahe.apply(image[:,:,1])
-        r = clahe.apply(image[:,:,2])
+        b = clahe.apply(image[:, :, 0])
+        g = clahe.apply(image[:, :, 1])
+        r = clahe.apply(image[:, :, 2])
         return cv2.merge((b, g, r))
 
 
@@ -220,9 +220,9 @@ def equalize(image):
     if image.ndim == 2:
         return cv2.equalizeHist(image)
     else:
-        b = cv2.equalizeHist(image[:,:,0])
-        g = cv2.equalizeHist(image[:,:,1])
-        r = cv2.equalizeHist(image[:,:,2])
+        b = cv2.equalizeHist(image[:, :, 0])
+        g = cv2.equalizeHist(image[:, :, 1])
+        r = cv2.equalizeHist(image[:, :, 2])
         return cv2.merge((b, g, r))
 
 
@@ -250,7 +250,7 @@ def translate(image, vertical=0, horizontal=0):
                   shift the image horizontally
     return: A numpy ndarray, which has the same number of dimensions as image
     """
-    return cv2.warpAffine(image, 
+    return cv2.warpAffine(image,
                           np.float32([[1, 0, horizontal], [0, 1, vertical]]),
                           image.shape[1::-1])
 
@@ -264,10 +264,10 @@ def crop_rect(image, vertical, horizontal, width, height):
         horizontal: An integer, which is the horizontal coord for the top left
                   of the rectangle
         width: An integer, which is the width of the rectangle
-        height: An integer, which is the height of the rectangle 
+        height: An integer, which is the height of the rectangle
     return: A numpy ndarray, which has the same number of dimensions as image
     """
-    return image[vertical:vertical+height, horizontal:horizontal+width]
+    return image[vertical:vertical + height, horizontal:horizontal + width]
 
 
 def crop_rect_coords(image, vertical1, horizontal1, vertical2, horizontal2):
@@ -301,7 +301,7 @@ def shrink_sides(image, ts=0, bs=0, ls=0, rs=0):
             of the image
     return: A numpy ndarray, which has the same number of dimensions as image
     """
-    return image[ts:image.shape[0]-bs, ls:image.shape[1]-rs]
+    return image[ts:image.shape[0] - bs, ls:image.shape[1] - rs]
 
 
 def crop(image, shape, horizontal_center=0, vertical_center=0):
@@ -315,9 +315,11 @@ def crop(image, shape, horizontal_center=0, vertical_center=0):
                          image's vertical center
     return: A numpy ndarray, which has the same number of dimensions as image
     """
-    ds = (image.shape[0]-shape[0])//2, (image.shape[1]-shape[1])//2
-    return shrink_sides(image, ds[0]+vertical_center, ds[0]-vertical_center,
-                        ds[1]+horizontal_center, ds[1]-horizontal_center)
+    ds = (image.shape[0] - shape[0]) // 2, (image.shape[1] - shape[1]) // 2
+    return shrink_sides(image, ds[0] + vertical_center,
+                        ds[0] - vertical_center,
+                        ds[1] + horizontal_center,
+                        ds[1] - horizontal_center)
 
 
 def pad(image, ts=0, bs=0, ls=0, rs=0, color=(0, 0, 0)):
@@ -352,8 +354,8 @@ def blend(image1, image2, image1_weight=.5, image2_weight=None):
     return: A numpy ndarray, which has the same number of dimensions as image1
     """
     if image2_weight is None:
-        image2_weight = 1-image1_weight
-    return cv2.addWeighted(image1,image1_weight,image2,image2_weight,0)
+        image2_weight = 1 - image1_weight
+    return cv2.addWeighted(image1, image1_weight, image2, image2_weight, 0)
 
 
 def zoom(image, shape, horizontal_center=0, vertical_center=0):
@@ -368,7 +370,7 @@ def zoom(image, shape, horizontal_center=0, vertical_center=0):
     return: A numpy ndarray, which has the same number of dimensions as image
     """
     old_shape = image.shape[1::-1]
-    image = crop(image, shape, vertical_center=vertical_center, 
+    image = crop(image, shape, vertical_center=vertical_center,
                  horizontal_center=horizontal_center)
     return resize(image, old_shape)
 
@@ -432,7 +434,8 @@ def create_mask_of_colors_in_range(image, lower_bounds, upper_bounds):
     return masks
 
 
-def compute_color_ranges(images, percentage_captured=50, num_bounds=1, use_evolution_algo=False):
+def compute_color_ranges(images, percentage_captured=50,
+                         num_bounds=1, use_evolution_algo=False):
     """Computes the color ranges that captures a percentage of the image.
     This algorithm is not well designed and is mainly for testing purposes.
     params:
@@ -444,7 +447,6 @@ def compute_color_ranges(images, percentage_captured=50, num_bounds=1, use_evolu
     return: A tuple of 2 list with the former containing lower
             bounds and the latter upper bounds
     """
-    num_splits = num_bounds + 1
     if use_evolution_algo:
         raise NotImplementedError('NOT DONE')
     else:
@@ -466,8 +468,8 @@ def create_magnitude_spectrum(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     dft = cv2.dft(np.float32(image), flags=cv2.DFT_COMPLEX_OUTPUT)
     dft_shift = np.fft.fftshift(dft)
-    magnitude_spectrum = 20*np.log(cv2.magnitude(dft_shift[:,:,0], 
-                                                 dft_shift[:,:,1]))
+    magnitude_spectrum = 20 * np.log(cv2.magnitude(dft_shift[:, :, 0],
+                                                   dft_shift[:, :, 1]))
     return magnitude_spectrum
 
 
@@ -475,37 +477,38 @@ def freq_filter_image(image, high=True):
     """Filters frequencies in the image.
     params:
         image: A numpy ndarray, which has 2 or 3 dimensions (BGR)
-    return: A numpy ndarray, which has 2 dimensions 
+    return: A numpy ndarray, which has 2 dimensions
     """
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     dft = cv2.dft(np.float32(image), flags=cv2.DFT_COMPLEX_OUTPUT)
     dft_shift = np.fft.fftshift(dft)
 
     rows, cols = image.shape
-    crow, ccol = rows // 2 , cols // 2
+    crow, ccol = rows // 2, cols // 2
     if high:
-        dft_shift[crow-30:crow+31, ccol-30:ccol+31] = 0
+        dft_shift[crow - 30:crow + 31, ccol - 30:ccol + 31] = 0
     else:
-        mask = np.zeros((rows,cols,2),np.uint8)
-        mask[crow-30:crow+30, ccol-30:ccol+30] = 1
+        mask = np.zeros((rows, cols, 2), np.uint8)
+        mask[crow - 30:crow + 30, ccol - 30:ccol + 30] = 1
         dft_shift *= mask
     image = cv2.idft(np.fft.ifftshift(dft_shift))
-    image = cv2.magnitude(image[:,:,0], image[:,:,1])
-    return image   
+    image = cv2.magnitude(image[:, :, 0], image[:, :, 1])
+    return image
 
 
-def create_histograms(images, hsv_images=False, channels=None, 
+def create_histograms(images, hsv_images=False, channels=None,
                       vrange=None, num_bins=None):
     """
     params:
-        image: A list of numpy ndarray, which each ndarray is 2 or 3 dimensions
-               (must all have same dimensions)
+        image: A list of numpy ndarray, which each ndarray is 2 or
+               3 dimensions (must all have same dimensions)
         hsv_images: A boolean, which determines if the image is HSV
         channels: A list of integers within 0-2 (inclusive), which are the
                   channels to get the histograms of
-        vrange: A list the same length as channels with list containing 2 integers
-                containing the lower and upper+1 value of a channel
-        num_bins: An integer, which is the number of bins to have for the histograms
+        vrange: A list the same length as channels with list containing 2
+                integers containing the lower and upper+1 value of a channel
+        num_bins: An integer, which is the number of bins to have for
+                  the histograms
     return: A numpy ndarray, which is a list of the histograms
     """
     if not isinstance(images, list):
@@ -551,7 +554,7 @@ class HistogramBackProjector:
             object_image: A numpy ndarray, which has 3 dimensions (BGR)
         """
         hsv = cv2.cvtColor(object_image, cv2.COLOR_BGR2HSV)
-        hist = cv2.calcHist([hsv], [0, 1], None, [180, 256], 
+        hist = cv2.calcHist([hsv], [0, 1], None, [180, 256],
                             [0, 180, 0, 256])
         cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
         self.hist = hist
@@ -569,7 +572,7 @@ class HistogramBackProjector:
         return: A numpy ndarray, which has 3 dimensions
         """
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        dst = cv2.calcBackProject([hsv], [0, 1], self.hist, 
+        dst = cv2.calcBackProject([hsv], [0, 1], self.hist,
                                   [0, 180, 0, 256], 1)
         if raw:
             return dst
@@ -616,7 +619,7 @@ class TemplateMatcher:
             top_left = max_loc
         return top_left, (self.w, self.h)
 
-    def match_draw_rect(self, image, color=(0, 255, 0), thickness=2, 
+    def match_draw_rect(self, image, color=(0, 255, 0), thickness=2,
                         method=cv2.TM_CCOEFF_NORMED):
         """Finds the top left point and dimensions (width, height)
            of a subimage that most matches the template and then
@@ -636,7 +639,7 @@ class TemplateMatcher:
         cv2.rectangle(image, top_left, (top_left[0] + w, top_left[1] + h),
                       color, thickness)
 
-    def match_draw_all_rects(self, image, threshold=.8, color=(0, 255, 0), 
+    def match_draw_all_rects(self, image, threshold=.8, color=(0, 255, 0),
                              thickness=2, method=cv2.TM_CCOEFF_NORMED):
         """Finds the top left point and dimensions (width, height)
            of all subimages that match the template and then
@@ -662,7 +665,7 @@ class TemplateMatcher:
             ys, xs = np.where(result >= threshold)
         for x, y in zip(xs, ys):
             # Not checking for overlaps
-            cv2.rectangle(image, (x, y), (x + self.w, y + self.h), 
+            cv2.rectangle(image, (x, y), (x + self.w, y + self.h),
                           color, thickness)
 
 
@@ -685,7 +688,7 @@ class Camera:
     def release(self):
         """Releases the camera object."""
         self.camera.release()
-        
+
     def capture(self, filename=None, target_shape=None, color=True):
         """Uses the camera object to capture an iamge.
         params:
@@ -710,7 +713,8 @@ class Camera:
         else:
             return frame
 
-    def record(self, num_frames=None, filename=None, target_shape=None, color=True):
+    def record(self, num_frames=None, filename=None,
+               target_shape=None, color=True):
         """Uses the camera object to capture many iamges in a row.
         params:
             num_frmaes: An integer, which is the number of frames to capture
@@ -842,7 +846,7 @@ class Windows:
         """Starts the thread for updating."""
         self.thread = Thread(target=self._update)
         self.thread.start()
-        
+
     def stop(self):
         """Stops the thread from updating."""
         if self.thread is not None:
@@ -859,7 +863,7 @@ class Windows:
         self.stop()
         if type is not None:
             return False
-    
+
     def _update(self):
         """Updates the windows. (Called by thread)"""
         while not self.stop_event.is_set():
@@ -909,7 +913,6 @@ class Windows:
         """
         del self.windows[name]
         cv2.destroyWindow(name)
-
 
     @staticmethod
     def mouse_callback_logger(event, x, y, flags, param):
@@ -980,7 +983,7 @@ if __name__ == '__main__':
             for _ in range(loops):
                 result = func(*args)
             end_time = time()
-        print((end_time-start_time)/loops)
+        print((end_time - start_time) / loops)
 
     c = Camera()
     x = c.capture()
@@ -996,7 +999,8 @@ if __name__ == '__main__':
         ws.add('pyr up', pyr(x, 2))
         ws.add('pyr down', pyr(x, -2))
         ws.add('increase brightness', increase_brightness(x, 10))
-        ws.add('increase brightness (relative)', increase_brightness(x, -10, True))
+        ws.add('increase brightness (relative)',
+               increase_brightness(x, -10, True))
         ws.add('set brightness', set_brightness(x, 10))
         ws.add('set brightness (relative)', set_brightness(x, 50, True))
         ws.add('set gamma', set_gamma(x, 1.5))
@@ -1019,14 +1023,14 @@ if __name__ == '__main__':
         ws.add('high pass filter', freq_filter_image(x))
         ws.add('low pass filter', freq_filter_image(x, False))
         tm = TemplateMatcher(crop_rect(x, 100, 50, 100, 100))
-        #tm.match_draw_rect(x)
+        # tm.match_draw_rect(x)
         tm.match_draw_all_rects(x)
         ws.add('match', x)
         input('take pic')
         x3 = c.record(100)
         hbp = HistogramBackProjector(x3[0])
         ws.add('hist backproject', np.vstack((hbp.backproject(x), x3[0])))
-        x4 = [bgr2hsv(cv2.GaussianBlur(y,(9,9),0)) for y in x3]
+        x4 = [bgr2hsv(cv2.GaussianBlur(y, (9, 9), 0)) for y in x3]
         hist = create_histograms(x4, hsv_images=True, channels=[0, 1])
         plt.imshow(hist, interpolation='nearest')
         plt.show()
