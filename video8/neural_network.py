@@ -1,21 +1,24 @@
 """
 Author: Travis Hammond
-Version: 12_19_2019
+Version: 12_21_2019
 """
 
 
 import os
 import datetime
-import h5py
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras.regularizers import l1_l2
 
 try:
-    from utils.util_funcs import load_directory_dataset
+    from utils.util_funcs import (
+        load_directory_dataset, load_h5py, save_h5py
+    )
 except ImportError:
-    from util_funcs import load_directory_dataset
+    from util_funcs import (
+        load_directory_dataset, load_h5py, save_h5py
+    )
 
 
 class Trainner:
@@ -39,9 +42,14 @@ class Trainner:
         self.validation_data = None
         self.test_data = None
 
-        if isinstance(data, str) and os.path.isdir(data):
-            assert file_loader is not None
-            data = load_directory_dataset(data, file_loader, file_loader_y)
+        if isinstance(data, str):
+            if os.path.isdir(data):
+                assert file_loader is not None
+                data = load_directory_dataset(data, file_loader,
+                                              file_loader_y)
+            else:
+                assert data.split('.')[1] == 'h5'
+                data = load_h5py(data)
         if isinstance(data, dict):
             if 'train_x' in data and 'train_y' in data:
                 self.train_data = (np.array(data['train_x']),
@@ -54,18 +62,6 @@ class Trainner:
             if 'test_x' in data and 'test_y' in data:
                 self.test_data = (np.array(data['test_x']),
                                   np.array(data['test_y']))
-        elif os.path.isfile(data):
-            assert data.split('.')[1] == 'h5'
-            with h5py.File(data, 'r') as hf:
-                if 'train_x' in hf and 'train_y' in hf:
-                    self.train_data = (hf['train_x'][:], hf['train_y'][:])
-                else:
-                    raise Exception('There must be a train dataset')
-                if 'validation_x' in hf and 'validation_y' in hf:
-                    self.validation_data = (hf['validation_x'][:],
-                                            hf['validation_y'][:])
-                if 'test_x' in hf and 'test_y' in hf:
-                    self.test_data = (hf['test_x'][:], hf['test_y'][:])
         else:
             raise ValueError('Invalid data')
 
@@ -93,13 +89,13 @@ class Trainner:
                 print(self.model.evaluate(self.validation_data[0],
                                           self.validation_data[1],
                                           batch_size=batch_size))
-                if self.test_data is not None:
-                    print('Test Data:')
-                    print(self.model.evaluate(self.test_data[0],
-                                              self.test_data[1],
-                                              batch_size=batch_size))
+            if self.test_data is not None:
+                print('Test Data:')
+                print(self.model.evaluate(self.test_data[0],
+                                          self.test_data[1],
+                                          batch_size=batch_size))
 
-    def load(self, path, optimizer, loss):
+    def load(self, path, optimizer, loss, metrics=None):
         """Loads a model and weights from a file.
            (overrides the inital provided model)
         params:
@@ -109,10 +105,13 @@ class Trainner:
                        the optimizer for the loaded model
             loss: A string or loss instance, which will be
                   the loss function for the loaded model
+            metrics: A list of metrics, which will be used
+                     by the loaded model
         """
         with open(os.path.join(path, 'model.json'), 'r') as file:
             self.model = model_from_json(file.read())
-            self.model.compile(optimizer=optimizer, loss=loss)
+            self.model.compile(optimizer=optimizer, loss=loss,
+                               metrics=metrics)
         self.model.load_weights(os.path.join(path, 'weights.h5'))
         with open(os.path.join(path, 'note.txt'), 'r') as file:
             print(file.read(), end='')
@@ -254,32 +253,32 @@ def conv1d(filters, kernel_size, strides=1, activation='relu',
         kernel_initializer = 'he_normal'
     else:
         kernel_initializer = 'glorot_uniform'
-        if l1 == l2 == 0:
-            cl = keras.layers.Conv1D(filters, kernel_size,
-                                     activation=activation,
-                                     strides=strides, padding=padding,
-                                     name=name, use_bias=not batch_norm,
-                                     kernel_initializer=kernel_initializer)
-        else:
-            cl = keras.layers.Conv1D(filters, kernel_size,
-                                     activation=activation,
-                                     strides=strides, padding=padding,
-                                     kernel_regularizer=l1_l2(l1, l2),
-                                     name=name, use_bias=not batch_norm,
-                                     kernel_initializer=kernel_initializer)
-        if batch_norm:
-            bn_name = name + '_batchnorm' if name is not None else None
-            bnl = keras.layers.BatchNormalization(epsilon=epsilon,
-                                                  momentum=momentum,
-                                                  name=bn_name)
-        if (max_pool_size is not None or max_pool_strides is not None):
-            mp_name = name + '_maxpool' if name is not None else None
-            mpl = keras.layers.MaxPooling1D(pool_size=max_pool_size,
-                                            strides=max_pool_strides,
-                                            name=mp_name)
-        if upsampling_size is not None:
-            us_name = name + '_upsample' if name is not None else None
-            usl = keras.layers.UpSampling1D(upsampling_size, name=us_name)(x)
+    if l1 == l2 == 0:
+        cl = keras.layers.Conv1D(filters, kernel_size,
+                                    activation=activation,
+                                    strides=strides, padding=padding,
+                                    name=name, use_bias=not batch_norm,
+                                    kernel_initializer=kernel_initializer)
+    else:
+        cl = keras.layers.Conv1D(filters, kernel_size,
+                                    activation=activation,
+                                    strides=strides, padding=padding,
+                                    kernel_regularizer=l1_l2(l1, l2),
+                                    name=name, use_bias=not batch_norm,
+                                    kernel_initializer=kernel_initializer)
+    if batch_norm:
+        bn_name = name + '_batchnorm' if name is not None else None
+        bnl = keras.layers.BatchNormalization(epsilon=epsilon,
+                                                momentum=momentum,
+                                                name=bn_name)
+    if (max_pool_size is not None or max_pool_strides is not None):
+        mp_name = name + '_maxpool' if name is not None else None
+        mpl = keras.layers.MaxPooling1D(pool_size=max_pool_size,
+                                        strides=max_pool_strides,
+                                        name=mp_name)
+    if upsampling_size is not None:
+        us_name = name + '_upsample' if name is not None else None
+        usl = keras.layers.UpSampling1D(upsampling_size, name=us_name)(x)
 
     def layer(x):
         """Applies 1D convolution layer to layer x.
@@ -315,7 +314,6 @@ def conv2d(filters, kernel_size=3, strides=1, activation='relu',
                        of the pooling windows
         max_pool_strides: An integer or tuple of 2 integers, which is the
                           factor to downscale by
-        upsampling_size: An integer, which is the factor to upsample by
         l1: A float, which is the amount of L1 regularization
         l2: A float, which is the amount of L2 regularization
         batch_norm: A boolean, which determines if batch
@@ -323,6 +321,9 @@ def conv2d(filters, kernel_size=3, strides=1, activation='relu',
         momentum: A float, which is the momentum for the moving
                   mean and variance
         epsilon: A float, which adds variance to avoid dividing by zero
+        upsampling_size: An integer, which is the factor to upsample by
+        transpose: A boolean, which determines if the convolution layer
+                   should be a deconvolution layer
         name: A string, which is the name of the dense layer
     return: A function, which takes a layer as input and returns
             a conv2d(layer)
@@ -402,9 +403,9 @@ def inception(inceptions):
 
 
 if __name__ == '__main__':
-    with h5py.File('data.h5', 'w') as file:
-        file.create_dataset('train_x', data=np.array([[0, 0], [1, 1]]))
-        file.create_dataset('train_y', data=np.array([0, 1]))
+    tx = np.array([[0, 0], [1, 1]])
+    ty = np.array([0, 1])
+    save_h5py('data.h5', {'train_x': tx, 'train_y': ty})
 
     inputs = keras.layers.Input(shape=(2,))
     x = dense(16)(inputs)
@@ -414,7 +415,7 @@ if __name__ == '__main__':
                   metrics=['accuracy'])
 
     trainner = Trainner(model, 'data.h5')
-    trainner.train(100)
+    trainner.train(10000)
     path = trainner.save('')
     predictor = Predictor(path)
     print(predictor.predict([0, 1]))

@@ -4,7 +4,7 @@ x1 = load('corn_field.jpg', (512, 512))
 x2 = load('sunset.jpg', (512, 512))
 
 ws = Windows()
-ws.start() # make sure to call ws.stop() 
+ws.start()
 cf = ws.add('corn_field', x1)
 ss = ws.add('sunset', x2)
 

@@ -1,12 +1,14 @@
 """
 Author: Travis Hammond
-Version: 12_19_2019
+Version: 12_21_2019
 """
 
 
 import cv2
 import numpy as np
+from time import time, sleep
 from threading import Thread, Event, Lock
+from matplotlib import pyplot as plt
 
 
 def rgb2bgr(image):
@@ -828,13 +830,19 @@ class LockDict:
 
 class Windows:
     """This class is used to displays images."""
+    created = False
 
     def __init__(self, update_delay=1):
         """Initializes the Dictionaries for holding the windows.
+           (Can only have one instance per process)
         params:
             update_delay: An integer, which is the number of ms
                           to delay each update (must be > 0)
         """
+        if Windows.created:
+            raise Exception('Only one Windows instance can exist per process.')
+        else:
+            Windows.created = True
         assert update_delay > 0, 'update_delay must be greater than 0'
         self.update_delay = update_delay
         self.windows = LockDict()
@@ -844,37 +852,49 @@ class Windows:
 
     def start(self):
         """Starts the thread for updating."""
-        self.thread = Thread(target=self._update)
-        self.thread.start()
+        if self.thread is None:
+            self.thread = Thread(target=self._update, daemon=True)
+            self.thread.start()
+        self.stop_event.clear()
 
     def stop(self):
-        """Stops the thread from updating."""
+        """Stops the thread from updating the windows and removes
+           all windows.
+        """
         if self.thread is not None:
             self.stop_event.set()
-            self.thread.join()
-            self.thread = None
 
     def __enter__(self):
         """Starts the thread for updating."""
         self.start()
 
     def __exit__(self, type, value, traceback):
-        """Stops the thread from updating."""
+        """Stops the thread from updating the windows and removes
+           all windows.
+        """
         self.stop()
         if type is not None:
             return False
 
     def _update(self):
         """Updates the windows. (Called by thread)"""
-        while not self.stop_event.is_set():
-            for name, image in self.windows.items():
-                if self.callbacks[name] is not None:
-                    cv2.namedWindow(name)
-                    cv2.setMouseCallback(name, self.callbacks[name])
-                    self.callbacks[name] = None
-                cv2.imshow(name, image)
-            cv2.waitKey(self.update_delay)
-        cv2.destroyAllWindows()
+        windows_open = False
+        while True:
+            while not self.stop_event.is_set():
+                windows_open = True
+                for name, image in self.windows.items():
+                    if self.callbacks[name] is not None:
+                        cv2.namedWindow(name)
+                        cv2.setMouseCallback(name, self.callbacks[name])
+                        self.callbacks[name] = None
+                    cv2.imshow(name, image)
+                    cv2.waitKey(self.update_delay)
+            if windows_open:
+                cv2.destroyAllWindows()
+                self.windows = LockDict()
+                self.callbacks = LockDict()
+                windows_open = False
+            sleep(.01)
 
     def add(self, name='Image', image=None, mouse_callback=None):
         """Adds an image to the update dictionary.
@@ -912,6 +932,7 @@ class Windows:
             name: A string, which is the unguaranteed name of the window.
         """
         del self.windows[name]
+        del self.callbacks[name]
         cv2.destroyWindow(name)
 
     @staticmethod
@@ -969,9 +990,6 @@ class Windows:
 
 
 if __name__ == '__main__':
-    from time import time, sleep
-    from matplotlib import pyplot as plt
-
     def avg_time(func, args=None, loops=1000):
         if args is None:
             start_time = time()
