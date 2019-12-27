@@ -53,7 +53,7 @@ def dense_model():
     outputs = keras.layers.Dense(len(labels), activation='softmax')(x)
     model = keras.Model(inputs=inputs, outputs=outputs)
     model.compile(optimizer='adam', loss='categorical_crossentropy',
-                metrics=['accuracy'], experimental_run_tf_function=False)
+                metrics=['accuracy'], experimental_run_tf_function=True)
     return model
 
 def basic_conv_model():
