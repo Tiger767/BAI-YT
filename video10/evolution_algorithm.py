@@ -1,6 +1,6 @@
 """
 Author: Travis Hammond
-Version: 12_22_2019
+Version: 1_4_2020
 """
 
 
@@ -775,7 +775,7 @@ class HyperParameterTuner:
         if lowest_best:
             selection = Selection.select_lowest()
         else:
-            selection = Selection.select_highest()
+            selection = Selection.select_greatest()
         if crossover_func is None:
             crossover_func = Crossover.single()
 
