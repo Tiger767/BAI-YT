@@ -78,7 +78,7 @@ if __name__ == '__main__':
     if agent_to_use == 'DQN':
         policy = StochasticPolicy(
             GreedyPolicy(), ExponentialDecay(1, .001, .01),
-            .01, np.prod(env.action_shape)
+            .01, env.action_shape[0]
         )
         qmodel = create_qmodel(env.state_shape, env.action_shape)
         agent = DQNAgent(policy, qmodel, .99,
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
         agent.set_playing_data(training=True, memorizing=True,
                                batch_size=64, mini_batch=10000, epochs=1,
-                               entropy_coef=0,
+                               entropy_coef=0.0,
                                verbose=True)
         for ndx in range(18):
             print(f'Save Loop: {ndx}')
